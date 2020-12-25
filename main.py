@@ -43,10 +43,10 @@ def train(model, optimizer, lr_scheduler):
             res = res.reshape(-1)
             # print(labels.shape)
             optimizer.zero_grad()
-            if epoch > -1:
-                loss = weighted_focal_loss(res, labels.squeeze(-1), weight.squeeze(-1), size_average=False)
+            if epoch > 100:
+                loss = weighted_focal_loss(res, labels.squeeze(-1), weight.squeeze(-1))
             else:
-                loss = weighted_bce_loss(res, labels.squeeze(-1), weight.squeeze(-1), size_average=False)
+                loss = weighted_bce_loss(res, labels.squeeze(-1), weight.squeeze(-1))
                 
             loss.backward()
             optimizer.step()
@@ -100,7 +100,7 @@ def write_test():
     test_dataset = Smiles(data_choice='test', pos_weight=my_cfg['pos_weight'], device=device)
     test_loader = DataLoader(test_dataset, batch_size=my_cfg['batch_size'], shuffle=False)
 
-    best_model = GCN(60, 32, 4)
+    best_model = GCN(34, 32, 2)
     best_model.load_state_dict(torch.load('./bestmodel.pth'))
     if torch.cuda.is_available():
         best_model = best_model.cuda()
@@ -115,7 +115,7 @@ def write_test():
             results.append({'name': name, 'res': my_res})
 
     exp_num = my_cfg['exp_num']
-    with open(f'../code/data/test/output_{exp_num}.txt', "w") as f:
+    with open(f'./data/test/output_{exp_num}.txt', "w") as f:
         f.write('Chemical,Label\n')
         assert len(results) == 610
         for i in range(len(results)):
@@ -127,7 +127,7 @@ def write_test():
 
 
 def main():
-    model = GCN(60, 32, 4)
+    model = GCN(34, 32, 2)
     if torch.cuda.is_available():
         model = model.cuda()
     

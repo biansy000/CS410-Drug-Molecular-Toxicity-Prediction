@@ -11,16 +11,16 @@ import rdkit.Chem as Chem
 from rdkit.Chem.rdmolops import GetAdjacencyMatrix
 from scipy import sparse
 
-paths = {'test': "../code/data/test",
-        'train': "../code/data/train",
-        'valid': "../code/data/validation"}
+paths = {'test': "./data/test",
+        'train': "./data/train",
+        'valid': "./data/validation"}
 
-element_dict = {6: 0, 7: 1, 8: 2, 35: 3, 17: 4, 11: 5, 16: 6, 15: 7, 20: 8, 9: 9, 5: 10, 
-                33: 11, 13: 12, 53: 13, 14: 14, 19: 15, 24: 16, 30: 17, 34: 18, 40: 19, 26: 20, 
-                50: 21, 60: 22, 29: 23, 79: 24, 82: 25, 81: 26, 51: 27, 48: 28, 46: 29, 22: 30, 
-                1: 31, 78: 32, 49: 33, 56: 34, 47: 35, 66: 36, 80: 37, 3: 38, 70: 39, 25: 40, 
-                12: 41, 27: 42, 28: 43, 4: 44, 32: 45, 83: 46, 23: 47, 38: 48, 42: 49, 44: 50, 63: 51, 21: 52}
+element_dict = {6: 0, 7: 1, 8: 2, 35: 3, 17: 4, 11: 5, 16: 6, 
+                15: 7, 20: 8, 9: 9, 5: 10, 33: 11, 13: 12, 53: 13, 14: 14, 19: 15, 
+                24: 16, 30: 17, 26: 18, 50: 19, 1: 20, 78: 21, 56: 22, 80: 23, 3: 24, 27: 25}
 
+max_numbers = [7, 7, 4, 5, 4, 5, 2]
+start = [0, 7, 14, 18, 23, 27, 31]
 
 def read_data(choice='train', pos_weight=7.0):
     if choice == 'test':
@@ -65,6 +65,8 @@ print(mol.GetAtomWithIdx(1).GetAtomicNum())
 '''
 
 def get_adj_feat(rdata, choice='train'):
+    # maxs = np.zeros(60)
+    # number_cnt = {}
     new_data = []
     wrong_cnt = 0
     max_len = 133
@@ -100,14 +102,23 @@ def get_adj_feat(rdata, choice='train'):
             edge_weight = np.matmul(sqrt_diag_inv, A_hat)
             edge_weight = np.matmul(edge_weight, sqrt_diag_inv)
             
-            for k in range(adj.shape[0]+1, max_len):
-                edge_weight[k, k] = 0
+            # for k in range(adj.shape[0]+2, max_len):
+            #     edge_weight[k, k] = 0
 
-            my_features = np.zeros((max_len, 60), dtype=np.float32)
+            my_features = np.zeros((max_len, 34), dtype=np.float32)
             for i, atom in enumerate(mol.GetAtoms()):
-                my_features[i+1] = get_feature(atom)
+                tmp = get_feature(atom)
+                my_features[i+1] = tmp
+                '''
+                maxs = np.maximum(tmp, maxs)
+                atom_num = atom.GetAtomicNum()
+                if atom_num not in number_cnt:
+                    number_cnt[atom_num] = 1
+                else:
+                    number_cnt[atom_num] += 1
+                '''
 
-            data['adj'] = sparse.coo_matrix(padded_adj)
+            data['adj'] = sparse.coo_matrix(A_hat)
             data['features'] = np.array(my_features)
             data['edge_weight'] = sparse.coo_matrix(edge_weight)
             new_data.append(data)
@@ -116,7 +127,9 @@ def get_adj_feat(rdata, choice='train'):
             wrong_cnt += 1
     
     print('Discarded atoms', wrong_cnt)
-    print('max len', max_len)
+    # print('max len', max_len)
+    # print(maxs)
+    # print(number_cnt)
     '''
     print('length of a dict', elements)
     with open("elements.txt", "a") as f:
@@ -143,11 +156,20 @@ def get_feature(atom):
     aromatic = atom.GetIsAromatic()
     idx = atom.GetIdx()
 
-    onehot = [0. for i in range(53)]
-    onehot[element_dict[int(atom_num)]] = 1.
+    onehot = [0. for i in range(27)]
+    if int(atom_num) in element_dict:
+        onehot[element_dict[int(atom_num)]] = 1.
+    else:
+        onehot[26] = 1.
 
     other_feature = [degree, valence, formal_charge, exp_hs,
                 imp_valence, electron, aromatic]
+    '''
+    others = [0. for i in range(34)]
+    for i, feat in enumerate(other_feature):
+        index = max(start[i] + int(feat), max_numbers[i]-1)
+        others[index] = 1
+    '''
     feature = np.array(onehot + other_feature, dtype=np.float32)
     '''
     feature = [degree, atom_num, valence, formal_charge, exp_hs,
@@ -157,11 +179,12 @@ def get_feature(atom):
 
 if __name__ == "__main__":
     rdata = read_data('train', pos_weight=1)
-    data = get_adj_feat(rdata, 'test')
+    data = get_adj_feat(rdata, 'train')
     
     features = np.array([item['features'] for item in data])
     print(features.shape)
     features = features.reshape(-1, features.shape[-1])
-    print(features.mean(axis=0))
-    print(np.std(features, axis=0))
-    
+    print(features.min(axis=1))
+    # assert (features.min(axis=1) == 0).all()
+    for item in features.min(axis=1):
+        print(item)

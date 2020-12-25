@@ -1,18 +1,18 @@
 import torch
 import torch.nn as nn
 
-def weighted_bce_loss(input, target, weights, size_average=False):
+def weighted_bce_loss(input, target, weights, size_average=True):
     input = torch.clamp(input, min=1e-12, max=1-1e-12)
     out = nn.functional.binary_cross_entropy(input, target.float(), reduction='none')
     out = out * weights
 
     if size_average:
-        return out.sum() / weights.sum()
+        return out.sum() / weights.shape[0]
     else:
         return out.sum()
 
 
-def weighted_ce_loss(input, target, weights, size_average=False):
+def weighted_ce_loss(input, target, weights, size_average=True):
     input = torch.clamp(input, min=1e-12, max=1-1e-12)
     input = input.reshape(-1, 2)
     target = target.reshape(-1)

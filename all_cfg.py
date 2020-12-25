@@ -17,15 +17,15 @@ trivial_res_cfg = {
     'num_layers': 34,
     'output_choice': 'onehots',
     'lr': 1e-3, 
-    'batch_size': 100, 
+    'batch_size': 200, 
     'num_epoches': 30, 
     'use_LSTM': False,
     'loss_type': 'bce', 
     'data_augment': True,
     'add_valid': False, 
-    'pos_weight': 6.5,
-    'milestones': [20],
-    'exp_num': 0
+    'pos_weight': 6,
+    'milestones': [25],
+    'exp_num': 'no_edgeweight'
 }
 
 all_cfg = {
@@ -48,4 +48,22 @@ for item in total:
         cnt = cnt + 1
     
 print(my_dict)
+'''
+'''
+number = {6: 106498, 7: 10163, 8: 22831, 35: 458, 17: 2995, 11: 405, 16: 1929, 15: 293, 20: 26, 
+    9: 1570, 5: 28, 33: 16, 13: 39, 53: 201, 14: 108, 19: 43, 24: 9, 30: 8, 34: 4, 40: 2, 26: 9, 
+    50: 11, 60: 1, 29: 4, 79: 3, 82: 1, 81: 1, 51: 2, 48: 3, 46: 1, 22: 3, 1: 7, 78: 6, 49: 4, 56: 5, 
+    47: 2, 66: 1, 80: 6, 3: 5, 70: 1, 25: 3, 12: 2, 27: 5, 28: 4, 4: 1, 32: 1, 83: 1, 23: 1, 38: 1, 42: 1}
+
+keys = []
+for key, val in number.items():
+    if val >= 5:
+        keys.append(key)
+
+# print(keys)
+idx = {}
+for i, key in enumerate(keys):
+    idx[key] = i
+
+print(idx)
 '''

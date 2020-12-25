@@ -51,69 +51,85 @@ class GCN(nn.Module):
         super(GCN, self).__init__()
         self.max_len = 133
         self.nclass = nclass
-
-        self.embedding = nn.Linear(nfeat, nfeat, bias=True)
-        self.gc1 = GraphConvolution(nfeat, 2*nhid)
+        '''
+        self.ratio = nn.Parameter(torch.FloatTensor(1))
+        self.bias = nn.Parameter(torch.FloatTensor(1))
+        '''
+        # self.embedding2 = nn.Linear(7, nfeat//2, bias=True)
+        # self.embedding1 = nn.Linear(53, nfeat//2, bias=True)
+        self.embedding = nn.Linear(nfeat, nhid, bias=True)
+        self.gc1 = GraphConvolution(nhid, nhid)
         # self.bn1 = nn.BatchNorm1d(2*nhid)
-        self.gc2 = GraphConvolution(2*nhid, nhid)
+        self.gc2 = GraphConvolution(nhid, nhid//2)
         # self.bn2 = nn.BatchNorm1d(nhid)
-        self.gc3 = GraphConvolution(nhid, nclass)
+        self.gc3 = GraphConvolution(nhid//2, nclass)
         # self.bn3 = nn.BatchNorm1d(133)
         # self.gc4 = GraphConvolution(nhid//2, nclass)
         self.bn = nn.BatchNorm1d(nclass)
         # self.gc5 = GraphConvolution(nfeat, 1)
         # self.dropout = dropout
+        '''
         self.pool = nn.AdaptiveMaxPool1d(7)
         self.final_layer = nn.Linear(32, 1, bias=True)
         '''
-        self.fc1 = nn.Linear(self.max_len-1, 3, bias=True)
-        self.final_layer = nn.Linear(8, 1, bias=True)
-        '''
+        self.fc1 = nn.Linear(self.max_len-1, 7, bias=True)
+        self.final_layer = nn.Linear(16, 1, bias=True)
+        
+        # self.fc = nn.Linear(self.max_len*nclass, 1, bias=True)
+        # self.fc2 = nn.Linear(self.max_len//8, 1, bias=True)
 
     def forward(self, x, adj):
-        x = F.relu(self.embedding(x))
+        '''
+        x1 = x[:, :, :53]
+        x2 = x[:, :, 53:]
+        x1 = x1 * self.ratio + self.bias
+        x = torch.cat((x1, x2), dim=2)
+        '''
+        # x2 = self.embedding2(x2)
+        # x = F.relu(self.embedding(x))
+        # x = F.dropout(x, 0.2, training=self.training)
+        x = self.embedding(x)
         x = F.relu(self.gc1(x, adj))
+        # x = F.dropout(x, 0.3, training=self.training)
         # x = self.bn1(x.transpose(1, 2)).transpose(1, 2)
         x = self.graph_pooling(x, adj)
         # print(x)
         # x = F.dropout(x, self.dropout, training=self.training)
         x = F.relu(self.gc2(x, adj))
+        # x = F.dropout(x, 0.3, training=self.training)
         # x = self.bn2(x.transpose(1, 2)).transpose(1, 2)
         x = self.graph_pooling(x, adj)
         x = F.relu(self.gc3(x, adj))
         # x = self.graph_pooling(x, adj)
+        # x = F.dropout(x, 0.2, training=self.training)
         # x = self.bn3(x)
         # x = F.relu(self.gc4(x, adj))
         # x = self.graph_pooling(x, adj)
         # x = F.relu(self.gc5(x, adj))
-        # x = x[:, 0].sigmoid()
-        # x = F.dropout(x, self.dropout, training=self.training)
-        # x = self.pool(x).sigmoid()
-        # x = F.relu(self.fc1(x))
         
         x = x.transpose(1, 2) # b * nclass * atom_num
-        '''
-        x = self.bn(x)
-        fst_x = x[:, :, :1]
-        x = x[:, :, 1:]
-
-        x = F.dropout(x, 0.5, training=self.training)
-        x = F.relu(self.fc1(x))
-        '''
-        x = self.bn(x)
-        fst_x = x[:, :, :1]
-        x = x[:, :, 1:]
-        x = F.dropout(x, 0.5, training=self.training)
-        x = self.pool(x)
-        x = torch.cat((fst_x, x), dim=2).reshape(x.shape[0], 1, -1)
-        x = self.final_layer(x).sigmoid()
         
-        # x = x.reshape(x.shape[0], 1, -1)
-        # x = self.fc(x).sigmoid()
+        # x = self.bn(x)
+        
+        fst_x = x[:, :, :1]
+        x = x[:, :, 1:]
+        x = F.dropout(x, 0.3, training=self.training)
+        '''
+        fst_x = x[:, :, :1]
+        x = x[:, :, 1:]
+        # x = F.dropout(x, 0.2, training=self.training)
+        x = self.pool(x)
+        '''
+        x = self.fc1(x)
+        x = torch.cat((fst_x, x), dim=2).reshape(x.shape[0], 1, -1)
+        # x = F.dropout(x, 0.3, training=self.training)
+        # x = self.bn(x)
+        x = self.final_layer(x).sigmoid()
 
         return x
     
     def graph_pooling(self, x, adj):
-        x = torch.matmul(adj.to_dense(), x)
+        dense_adj = adj.to_dense()
+        x = torch.matmul(dense_adj, x) / torch.sum(dense_adj, dim=1).unsqueeze(-1)
         
         return x
