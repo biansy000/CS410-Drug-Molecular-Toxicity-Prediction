@@ -19,8 +19,8 @@ if torch.cuda.is_available():
 else:
     device = torch.device('cpu')
 
-torch.manual_seed(1)
-dtype = torch.float32
+# torch.manual_seed(1)
+# dtype = torch.float32
 
 train_dataset = Smiles(data_choice='train', pos_weight=my_cfg['pos_weight'], device=device)
 valid_dataset = Smiles(data_choice='valid', pos_weight=my_cfg['pos_weight'], device=device)
@@ -41,8 +41,9 @@ def train(model, optimizer, lr_scheduler):
         for i, (adj, features, labels, weight) in tqdm(enumerate(train_loader)):
             res = model(features, adj)
             res = res.reshape(-1)
+            # print(labels.shape)
             optimizer.zero_grad()
-            if epoch > 100:
+            if epoch > -1:
                 loss = weighted_focal_loss(res, labels.squeeze(-1), weight.squeeze(-1), size_average=False)
             else:
                 loss = weighted_bce_loss(res, labels.squeeze(-1), weight.squeeze(-1), size_average=False)
@@ -88,7 +89,7 @@ def valid(model, epoch):
     auc = valid_AUC_metric.AUC()
     print(f'Acc: {acc}, Recall: {recall}, AUC: {auc}, Weighted Acc: {weight_accu}\n')
 
-    if auc > max_waccu:
+    if auc > max_waccu and epoch>10:
         max_waccu = auc
         torch.save(model.state_dict(), './bestmodel.pth')
 
@@ -99,7 +100,7 @@ def write_test():
     test_dataset = Smiles(data_choice='test', pos_weight=my_cfg['pos_weight'], device=device)
     test_loader = DataLoader(test_dataset, batch_size=my_cfg['batch_size'], shuffle=False)
 
-    best_model = GCN(8, 16, 2)
+    best_model = GCN(60, 32, 4)
     best_model.load_state_dict(torch.load('./bestmodel.pth'))
     if torch.cuda.is_available():
         best_model = best_model.cuda()
@@ -113,7 +114,8 @@ def write_test():
         for name, my_res in zip(names, res):
             results.append({'name': name, 'res': my_res})
 
-    with open("./data/test/output.txt", "w") as f:
+    exp_num = my_cfg['exp_num']
+    with open(f'../code/data/test/output_{exp_num}.txt', "w") as f:
         f.write('Chemical,Label\n')
         assert len(results) == 610
         for i in range(len(results)):
@@ -125,11 +127,12 @@ def write_test():
 
 
 def main():
-    model = GCN(8, 16, 1)
+    model = GCN(60, 32, 4)
     if torch.cuda.is_available():
         model = model.cuda()
     
     # model._initialize()
+    print(my_cfg)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=my_cfg['lr'])
     #optimizer = torch.optim.RMSprop(model.parameters(), lr=my_cfg['lr'])

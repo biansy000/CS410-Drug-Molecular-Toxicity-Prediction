@@ -9,14 +9,16 @@ paths = {'test': "../code/data/test",
         'train': "../code/data/train",
         'valid': "../code/data/validation"}
 
-mean_feature = np.array([2.8033829e-01, 9.5845491e-01, 3.5248524e-01, 5.5676805e-06, 5.6651151e-03,
+tmp_zeros = [0. for i in range(53)]
+tmp_ones = [1. for i in range(53)]
+mean_feature = np.array(tmp_zeros+[2.8033829e-01, 3.5248524e-01, 5.5676805e-06, 5.6651151e-03,
                             1.2676866e-01, 3.9901712e-05, 4.4107165e-02])
-mean_std = np.array([0.7668853,  2.7076464,  0.9752085,  0.05274452, 0.07659069, 0.48673064,
+mean_std = np.array(tmp_ones+[0.7668853,  0.9752085,  0.05274452, 0.07659069, 0.48673064,
                         0.01005699, 0.20410864])
 
 
 class Smiles(Data.Dataset):
-    def __init__(self, data_choice, use_edgeweight=False, dtype=torch.float32, pos_weight=7.0, device=torch.device('cpu') ):
+    def __init__(self, data_choice, use_edgeweight=True, dtype=torch.float32, pos_weight=7.0, device=torch.device('cpu') ):
         # data augment: generate different SMILES for one chemical
         super(Smiles, self).__init__()
         self.data_choice = data_choice

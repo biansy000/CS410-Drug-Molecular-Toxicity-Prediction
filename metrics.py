@@ -29,7 +29,9 @@ class EvaMetric:
         self.false_pos += np.sum(false_pos * 1.0)
         self.truth_neg += np.sum(truth_neg * 1.0)
         self.false_neg += np.sum(false_neg * 1.0)
-        assert float(self.total_num) == self.truth_pos + self.false_pos + self.truth_neg + self.false_neg
+        # print(self.truth_pos, self.false_pos)
+        assert float(self.total_num) == self.truth_pos + self.false_pos + self.truth_neg + self.false_neg, \
+            f'{float(self.total_num)}, {self.truth_pos + self.false_pos + self.truth_neg + self.false_neg}, {pred}'
 
     def accuracy(self):
         return (self.truth_pos + self.truth_neg) / self.total_num
