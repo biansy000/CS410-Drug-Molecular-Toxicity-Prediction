@@ -30,7 +30,7 @@ def weighted_focal_loss(input, target, weights, size_average=False):
     input = torch.clamp(input, min=1e-12, max=1-1e-12).reshape(-1)
     target = target.reshape(-1)
     weights = weights.reshape(-1)
-    gamma = 2
+    gamma = 1.5
     # Calculate p_t
     p_t = torch.where(target==1, input, 1 - input)
 

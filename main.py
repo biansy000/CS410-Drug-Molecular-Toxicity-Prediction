@@ -43,7 +43,7 @@ def train(model, optimizer, lr_scheduler):
             res = res.reshape(-1)
             # print(labels.shape)
             optimizer.zero_grad()
-            if epoch > 100:
+            if epoch > -1:
                 loss = weighted_focal_loss(res, labels.squeeze(-1), weight.squeeze(-1))
             else:
                 loss = weighted_bce_loss(res, labels.squeeze(-1), weight.squeeze(-1))
@@ -92,16 +92,19 @@ def valid(model, epoch):
     if auc > max_waccu and epoch>10:
         max_waccu = auc
         torch.save(model.state_dict(), './bestmodel.pth')
+    
+    if epoch % 10 == 0 and epoch >20:
+         torch.save(model.state_dict(), f'./model_{epoch}.pth')
 
     return 
 
 
-def write_test():
+def write_test(model_name):
     test_dataset = Smiles(data_choice='test', pos_weight=my_cfg['pos_weight'], device=device)
     test_loader = DataLoader(test_dataset, batch_size=my_cfg['batch_size'], shuffle=False)
 
     best_model = GCN(34, 32, 2)
-    best_model.load_state_dict(torch.load('./bestmodel.pth'))
+    best_model.load_state_dict(torch.load(model_name))
     if torch.cuda.is_available():
         best_model = best_model.cuda()
         
@@ -115,7 +118,8 @@ def write_test():
             results.append({'name': name, 'res': my_res})
 
     exp_num = my_cfg['exp_num']
-    with open(f'./data/test/output_{exp_num}.txt', "w") as f:
+    model_name = model_name.split('.')[-2][1:]
+    with open(f'./data/test/output_{model_name}.txt', "w") as f:
         f.write('Chemical,Label\n')
         assert len(results) == 610
         for i in range(len(results)):
@@ -128,6 +132,7 @@ def write_test():
 
 def main():
     model = GCN(34, 32, 2)
+    # model.load_state_dict(torch.load('model_40.pth'))
     if torch.cuda.is_available():
         model = model.cuda()
     
@@ -146,5 +151,14 @@ def main():
 if __name__ == "__main__":
     #train = True
     main()
-    write_test()
+    # write_test('./bestmodel.pth')
+    write_test('./model_30.pth')
+    write_test('./model_40.pth')
+    write_test('./model_50.pth')
+    write_test('./model_60.pth')
+    write_test('./model_70.pth')
+    # write_test('./model_80.pth')
+    # write_test('./model_90.pth')
+    # write_test('./model_100.pth')
+    # write_test('./model_110.pth')
     print(max_waccu)

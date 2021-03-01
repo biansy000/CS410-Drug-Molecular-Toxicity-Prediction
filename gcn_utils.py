@@ -89,7 +89,7 @@ def get_adj_feat(rdata, choice='train'):
             # padded_adj[:adj.shape[0], :adj.shape[1]] = adj
 
             unit = np.eye(max_len)
-            A_hat = padded_adj + unit
+            A_hat = padded_adj + 2*unit
             diagonal = np.zeros_like(padded_adj)
             for k in range(0, max_len):
                 diagonal[k, k] = np.sum(A_hat[k])
@@ -184,7 +184,6 @@ if __name__ == "__main__":
     features = np.array([item['features'] for item in data])
     print(features.shape)
     features = features.reshape(-1, features.shape[-1])
-    print(features.min(axis=1))
-    # assert (features.min(axis=1) == 0).all()
-    for item in features.min(axis=1):
-        print(item)
+    print(features.mean(axis=0))
+    print(features.std(axis=0))
+    

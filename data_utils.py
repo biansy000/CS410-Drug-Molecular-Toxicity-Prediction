@@ -9,13 +9,17 @@ paths = {'test': "./data/test",
         'train': "./data/train",
         'valid': "./data/validation"}
 
-tmp_zeros = [0. for i in range(27)]
-tmp_ones = [0.2 for i in range(27)]
+# tmp_zeros = [0. for i in range(27)]
+# tmp_ones = [0.5 for i in range(27)]
+
+tmp_zeros = [0.951]
+tmp_ones = [2.699]
 '''
 mean_feature = np.array(tmp_zeros+[2.8033829e-01, 3.5248524e-01, 5.5676805e-06, 5.6651151e-03,
                             1.2676866e-01, 3.9901712e-05, 4.4107165e-02])
 mean_std = np.array(tmp_ones+[0.7668853,  0.9752085,  0.05274452, 0.07659069, 0.48673064,
                         0.01005699, 0.20410864])
+
 '''
 mean_feature = np.array([9.8081432e-02, 9.3598152e-03, 2.1026660e-02, 4.2180414e-04, 2.7583044e-03,
  3.7299274e-04, 1.7765507e-03, 2.6984414e-04, 2.3945213e-05, 1.4459225e-03,

@@ -17,14 +17,14 @@ trivial_res_cfg = {
     'num_layers': 34,
     'output_choice': 'onehots',
     'lr': 1e-3, 
-    'batch_size': 200, 
-    'num_epoches': 30, 
+    'batch_size': 500, 
+    'num_epoches': 61, 
     'use_LSTM': False,
     'loss_type': 'bce', 
     'data_augment': True,
     'add_valid': False, 
     'pos_weight': 6,
-    'milestones': [25],
+    'milestones': [50],
     'exp_num': 'no_edgeweight'
 }
 
