@@ -151,14 +151,5 @@ def main():
 if __name__ == "__main__":
     #train = True
     main()
-    # write_test('./bestmodel.pth')
-    write_test('./model_30.pth')
-    write_test('./model_40.pth')
-    write_test('./model_50.pth')
-    write_test('./model_60.pth')
-    write_test('./model_70.pth')
-    # write_test('./model_80.pth')
-    # write_test('./model_90.pth')
-    # write_test('./model_100.pth')
-    # write_test('./model_110.pth')
+    write_test('./bestmodel.pth')
     print(max_waccu)
